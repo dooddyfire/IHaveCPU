@@ -28,7 +28,10 @@ if __name__ == '__main__':
     price_lis = []
     cat_lis = []
     detail_lis = []
-
+    attr_lis = []
+    price_main_lis = []
+    code_lis = []
+    image_lis = []
 #Get bot selenium make sure you can access google chrome
     driver = webdriver.Chrome(service= Service(ChromeDriverManager().install()))
     
@@ -54,13 +57,30 @@ if __name__ == '__main__':
         except:
             continue
 
+
+        brand = soupx.find('p',{'class':'f-085'}).text 
+        print(brand)
+        code = brand.split("|")[1].strip()
+        print(code)
+        code_lis.append(code)
+
+        print(brand.split("|")[0].strip())
+        brand_lis.append(brand.split("|")[0].strip())
+        
+        image = [ k['data-thumb'] for k in soupx.find('ul',{'id':'slider_image_detail'}).find_all('li')]
+        
+        image_item = "\n".join(image)
+        print(image_item)
+        image_lis.append(image_item)
+
+
         name = soupx.find('div',{'class':'detail-title'}).find('h1').text 
         name_lis.append(name)
         print(name)
 
-        brand = soupx.find('p',{'class':'f-085'}).text 
-        print(brand)
-        brand_lis.append(brand)
+
+
+
 
         detail = soupx.find('div',{'id':'content-detail'}).text.replace("รายละเอียดสินค้า","").strip()
         print(detail)
@@ -71,17 +91,34 @@ if __name__ == '__main__':
         price_lis.append(price)
 
         try:
-            cat = [d for d in soupx.find_all('span',{'class':'p-1'})] 
-            cat_x = " ".join(cat)
-            cat_lis.append(cat)
+            price_main = driver.find_element(By.XPATH,'//*[@id="change-content"]/div[1]/div/div[2]/div[2]/div/p').text 
+            print(price_main)
+            price_main_lis.append(price_main)
+        except: 
+            price_main = " "
+            print(price_main)
+            price_main_lis.append(price_main)            
+
+        try:
+            cat = [ g.text for g in driver.find_element(By.XPATH,'//*[@id="change-content"]/div[1]/div/div[2]/div[3]/div[3]').find_elements(By.CSS_SELECTOR,'span')]
+            cat_x = "\n".join(cat)
+            cat_lis.append(cat_x)
         except:
             cat_lis.append(" ")
+
+        attr = soupx.find('div',{'id':'content-detail'}).text
+        print(attr)
+        attr_lis.append(attr)
 
 df = pd.DataFrame()
 df['ชื่อสินค้า'] = name_lis 
 df['หมวดหมู่'] = cat_lis 
 df['ราคา'] = price_lis 
+df['ราคาก่อนลด'] = price_main_lis
 df['แบรนด์'] = brand_lis 
+df['รหัสสินค้า'] = code_lis 
 df['รายละเอียด'] = detail_lis 
+df['คุณสมบัติ'] = attr 
+df['ลิงค์รูป'] = image_lis
 
 df.to_excel("{}.xlsx".format(filename))
