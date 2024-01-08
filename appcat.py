@@ -7,7 +7,6 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
-import undetected_chromedriver as uc
 from selenium import webdriver
 import pandas as pd 
 from selenium.webdriver.common.by import By
