@@ -20,6 +20,7 @@ if __name__ == '__main__':
     url_lis = []
     start = int(input("Enter your start page : "))
     end = int(input("Enter your end page : "))
+    cat = input("ใส่ชื่อหมวดหมู่ : ")
     filename = input("Enter your filename : ")
 
     name_lis = []
@@ -31,20 +32,20 @@ if __name__ == '__main__':
     price_main_lis = []
     code_lis = []
     image_lis = []
-    det_prod_lis = []
+    content_img_lis = []
+    table_lis = []
+
+    link_lis = []
 #Get bot selenium make sure you can access google chrome
     driver = webdriver.Chrome(service= Service(ChromeDriverManager().install()))
     
    
     for i in range(start,end+1): 
 
-        # แก้ลิงค์ 
-        url = "https://www.ihavecpu.com/pages/Category?mode=manu_tab&search=ซีพียู&id=4&sort_by=R&page={}".format(i)
+        url = "https://www.ihavecpu.com/pages/Category?mode=manu_tab&search=โน้ตบุ๊ก&id=34&sort_by=R&page={}".format(i)
         driver.get(url)
 
         soup = BeautifulSoup(driver.page_source,'html.parser')
-
-
 
         for x in soup.find_all('div',{'class':'card-body'}): 
 
@@ -57,15 +58,11 @@ if __name__ == '__main__':
         try:
             driver.get(item)
             soupx = BeautifulSoup(driver.page_source,'html.parser')
+            
         except:
             continue
 
-        print(soup.prettify())
-
-        det = [ c.text.strip() for c in soupx.find_all('tr',{'class':'tr-detail-product'})]
-        print("---det---")
-        print("\n".join(det))
-        det_prod_lis.append(det)
+        link_lis.append(item)
 
 
         brand = soupx.find('p',{'class':'f-085'}).text 
@@ -89,8 +86,19 @@ if __name__ == '__main__':
         print(name)
 
 
+        tab_lis = []
+        for h in soupx.find_all('tr',{'class':'tr-detail-product'}): 
+            temp_lis = h.find_all('td',{'class':'py-1'})
+            temp_title = temp_lis[0].text.strip() 
+            temp_det = temp_lis[1].text.strip()
+
+            print("tab title {} detail {}".format(temp_title,temp_det)) 
 
 
+            tab_lis.append( (temp_title , temp_det)   )
+        
+        print("Attribute : ",tab_lis)
+        table_lis.append(tab_lis)
 
         detail = soupx.find('div',{'id':'content-detail'}).text.replace("รายละเอียดสินค้า","").strip()
         print(detail)
@@ -99,6 +107,11 @@ if __name__ == '__main__':
         price = soupx.find('span',{'id':'product_price'}).text.strip() 
         print(price)
         price_lis.append(price)
+
+        content_img = [ k['src'] for k in soupx.find('div',{'id':'content-detail'}).find_all('img')]
+        content_img_add = " ".join(content_img) 
+        print(content_img_add)
+        content_img_lis.append(content_img_add)
 
         try:
             price_main = driver.find_element(By.XPATH,'//*[@id="change-content"]/div[1]/div/div[2]/div[2]/div/p').text 
@@ -109,12 +122,10 @@ if __name__ == '__main__':
             print(price_main)
             price_main_lis.append(price_main)            
 
-        try:
-            cat = [ g.text for g in driver.find_element(By.XPATH,'//*[@id="change-content"]/div[1]/div/div[2]/div[3]/div[3]').find_elements(By.CSS_SELECTOR,'span')]
-            cat_x = "\n".join(cat)
-            cat_lis.append(cat_x)
-        except:
-            cat_lis.append(" ")
+
+
+        cat_lis.append(cat)
+
 
         attr = soupx.find('div',{'id':'content-detail'}).text
         print(attr)
@@ -127,9 +138,10 @@ df['ราคา'] = price_lis
 df['ราคาก่อนลด'] = price_main_lis
 df['แบรนด์'] = brand_lis 
 df['รหัสสินค้า'] = code_lis 
-df['ตารางคุณสมบัติ'] = det_prod_lis
 df['รายละเอียด'] = detail_lis 
 df['คุณสมบัติ'] = attr_lis
 df['ลิงค์รูป'] = image_lis
-
+df['ลิงค์รูปในรายละเอียด'] = content_img_lis
+df['คุณสมบัติตาราง'] = table_lis
+df['ลิงค์สินค้า'] = link_lis
 df.to_excel("{}.xlsx".format(filename))
